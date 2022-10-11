@@ -1,15 +1,15 @@
 def find_all_paths(x: dict, paths, path="/"):
-    if not x:
+    if not x:  # empty dirs
         paths.append(path)
     else:
         for key, value in x.items():
-            if validate_name(key):
-                if isinstance(value, dict):
+            if validate_name(key):  # checking only valid dirs
+                if isinstance(value, dict):  # checking nested dirs in current dir
                     if value:
                         find_all_paths(value, paths=paths, path=path + key + "/")
                     else:
                         paths.append(path + key)
-                else:
+                else:  # if only files left in dir, looking for first valid filename
                     values = validate_unique_files(value)
                     if values:
                         paths.append(path + key + "/" + values[0])
@@ -18,28 +18,27 @@ def find_all_paths(x: dict, paths, path="/"):
 def biggestPath(x: dict) -> str:
     paths = ['/']
     find_all_paths(x, paths=paths)
-    answer = [(len(elem.split('/')), elem) for elem in paths]
-    answer_without_too_long = list(filter(lambda path: len(path[1]) <= 255, answer))
-    return max(answer_without_too_long, key=lambda x: x[0])[1]
+    valid_paths = list(filter(lambda path: len(path) <= 255, paths))  # validating paths with length <= 255
+    return max(valid_paths,
+               key=lambda elem: len(elem.split("/")))  # looking for longest path by number of dirs included
 
 
 def validate_unique_files(x: list) -> list:
-    if len(x) == len(set(x)):
+    if len(x) == len(set(x)):  # only unique names in list
         return list(filter(lambda elem: validate_name(elem), x))
     for elem in set(x.copy()):
-        if x.count(elem) > 1:
+        if x.count(elem) > 1:  # deleting all repeating elems
             while elem in x:
                 x.remove(elem)
-        elif not validate_name(elem):
+        elif not validate_name(elem):  # validating names of elems
             x.remove(elem)
     return x
 
 
 def validate_name(name):
     for elem in name:
-        if elem.isalpha() and not 97 <= ord(elem.lower()) <= 122:
-            return False
-        elif not elem.isalnum():
+        # looking for english letters (only lowercase a-z) or nums
+        if (elem.isalpha() and not 97 <= ord(elem.lower()) <= 122) or not elem.isalnum():
             return False
     return True
 
@@ -64,7 +63,6 @@ d5 = {'dir1': {'dir2': {'dir3': {'dir4': {'dir5': {'dir6': {'dir7': {'dir8': {'d
 assert biggestPath(d1) == '/dir3/dir5/dir6/dir7'
 assert biggestPath(d2) == '/'
 assert biggestPath(d3) == '/dir1/file1'
-
 # invalid filename
 assert biggestPath(d4) == '/'
 # too long path
